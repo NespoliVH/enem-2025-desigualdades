@@ -73,7 +73,7 @@ Pré-requisitos: Python 3.14 e cerca de 5 GB livres em disco.
 
 ```bash
 # 1. Clonar o repositório
-git clone https://github.com/NESPOLIVH/enem-2025-desigualdades.git
+git clone https://github.com/NespoliVH/enem-2025-desigualdades.git
 cd enem-2025-desigualdades
 
 # 2. Ambiente virtual e dependências
