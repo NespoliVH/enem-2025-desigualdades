@@ -69,7 +69,7 @@ enem-2025-desigualdades/
 
 ## Como reproduzir
 
-Pré-requisitos: Python 3.14 e cerca de 5 GB livres em disco.
+Pré-requisitos: Python 3.14, cerca de 5 GB livres em disco e 7-Zip (Windows) ou unzip (Linux/macOS). O INEP compacta o `RESULTADOS_2025.csv` com Deflate64, formato que o módulo `zipfile` do Python não lê, e o script de download recorre a essas ferramentas automaticamente.
 
 ```bash
 # 1. Clonar o repositório
