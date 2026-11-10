@@ -17,6 +17,14 @@ celulas = [
 Caderno de **exploração preliminar, prototipação e validação** do projeto
 *Desigualdades no ENEM 2025: rede de ensino, território e perfil socioeconômico*.
 
+| | |
+|---|---|
+| **Autor** | Victor Hugo Nespoli |
+| **Instituição** | Centro Universitário La Salle do Rio de Janeiro (UNILASALLE-RJ) — Bacharelado em Sistemas de Informação |
+| **Disciplina** | Linguagem de Programação (Análise e Visualização de Dados com Python) — 6º Período |
+| **Semestre** | 2026/2 |
+| **Fonte** | INEP, *Microdados do Enem 2025* |
+
 O pipeline definitivo está em `src/etl.py`, e as figuras do artigo, em
 `src/visualizacao.py`. Este caderno parte dos dados já processados
 (`python -m src.etl`) e documenta as verificações que sustentam as decisões

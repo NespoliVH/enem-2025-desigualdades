@@ -1,5 +1,9 @@
 """Análises e visualizações das perguntas de pesquisa (RQ1 a RQ3).
 
+Autor: Victor Hugo Nespoli · Bacharelado em Sistemas de Informação, Centro Universitário La Salle do Rio de Janeiro (UNILASALLE-RJ)
+Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python) · 6º Período · 2026/2
+Licença: MIT · Repositório: https://github.com/NespoliVH/enem-2025-desigualdades
+
 Lê os dados tratados por ``src.etl`` e gera:
 
 * tabelas-resumo em ``data/processed/tabelas/`` (CSV);
@@ -96,12 +100,17 @@ def eixo(**kwargs) -> dict:
 
 
 def salvar_html(fig: go.Figure, nome: str) -> Path:
-    """Grava a figura como HTML autocontido; o plotly.js fica em docs/assets/."""
+    """Grava a figura como HTML autocontido; o plotly.js fica em docs/assets/.
+
+    O ``div_id`` fixo (em vez do UUID aleatório padrão do Plotly) torna o
+    arquivo idêntico byte a byte entre execuções.
+    """
     caminho = DIR_ASSETS / f"{nome}.html"
     fig.write_html(
         caminho,
         include_plotlyjs="directory",
         full_html=True,
+        div_id=nome,
         config={"displaylogo": False, "responsive": True, "locale": "pt-BR",
                 "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
     )

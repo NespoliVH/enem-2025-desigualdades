@@ -1,5 +1,9 @@
 """Pipeline ETL dos Microdados do ENEM 2025 (INEP).
 
+Autor: Victor Hugo Nespoli · Bacharelado em Sistemas de Informação, Centro Universitário La Salle do Rio de Janeiro (UNILASALLE-RJ)
+Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python) · 6º Período · 2026/2
+Licença: MIT · Repositório: https://github.com/NespoliVH/enem-2025-desigualdades
+
 Este módulo concentra as etapas reutilizáveis do projeto:
 
 1. **Extração**: leitura em blocos dos arquivos ``RESULTADOS_2025.csv`` e
@@ -407,7 +411,9 @@ def executar(raw_dir: Path = DIR_RAW, out_dir: Path = DIR_PROCESSED) -> dict[str
     }
     res.to_parquet(caminhos["resultados"], compression="zstd", index=False)
     part.drop(columns=["Q005"]).to_parquet(caminhos["participantes"], compression="zstd", index=False)
-    mun.to_csv(caminhos["municipios"], index=False, compression="gzip", float_format="%.6f")
+    # mtime=0 remove o carimbo de data do cabeçalho gzip: saída idêntica byte a byte
+    mun.to_csv(caminhos["municipios"], index=False, float_format="%.6f",
+               compression={"method": "gzip", "mtime": 0})
 
     for nome, cam in caminhos.items():
         log.info("Gravado %s: %s (%.1f MB)", nome, cam.name, cam.stat().st_size / 1e6)

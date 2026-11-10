@@ -1,5 +1,9 @@
 """Baixa os Microdados do ENEM 2025 do portal oficial do INEP.
 
+Autor: Victor Hugo Nespoli · Bacharelado em Sistemas de Informação, Centro Universitário La Salle do Rio de Janeiro (UNILASALLE-RJ)
+Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python) · 6º Período · 2026/2
+Licença: MIT · Repositório: https://github.com/NespoliVH/enem-2025-desigualdades
+
 Os arquivos brutos (~2,5 GB descompactados) excedem o limite de 100 MB por
 arquivo do GitHub e, por isso, não são versionados. Este script reproduz a
 aquisição sem autenticação nem credenciais:
