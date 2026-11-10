@@ -1,0 +1,17 @@
+# Ambientes virtuais e cache Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Dados brutos do INEP (~2,5 GB): obtidos via data/raw/download_dados.py
+data/raw/*.csv
+data/raw/*.zip
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

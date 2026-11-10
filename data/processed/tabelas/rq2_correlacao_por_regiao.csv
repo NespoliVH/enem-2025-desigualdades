@@ -1,0 +1,6 @@
+regiao,n_municipios,spearman,p_valor,media_geral_mediana,pct_baixa_renda_mediana
+Centro-Oeste,158,-0.5192,0.0000,509.6267,0.6298
+Nordeste,654,-0.6662,0.0000,496.8822,0.9025
+Norte,231,-0.8089,0.0000,473.9716,0.8799
+Sudeste,492,-0.8280,0.0000,545.1977,0.5527
+Sul,252,-0.8056,0.0000,538.7791,0.4591

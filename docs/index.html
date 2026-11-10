@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desigualdades no ENEM 2025</title>
+  <meta name="description" content="Artigo acadêmico: análise exploratória dos Microdados do ENEM 2025 (INEP) sobre rede de ensino, território, perfil socioeconômico e abstenção, com pipeline reprodutível em Python sob os princípios FAIR.">
+  <meta name="keywords" content="ENEM 2025, desigualdade educacional, microdados INEP, análise exploratória de dados, Python, princípios FAIR">
+  <meta name="author" content="Victor Hugo Nespoli">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <style>
+    :root {
+      --azul-escuro: #1e3a8a;
+      --azul: #2563eb;
+      --azul-claro: #3b82f6;
+      --texto: #1f2937;
+      --texto-sec: #4b5563;
+      --texto-fraco: #6b7280;
+      --borda: #e5e7eb;
+      --fundo-bloco: #f8fafc;
+      --fundo: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--fundo);
+      color: var(--texto);
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+    main { max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }
+    h1 { color: var(--azul-escuro); font-size: 2.1rem; line-height: 1.25; margin: 0 0 20px; font-weight: 700; }
+    h2 { color: var(--azul-escuro); font-size: 1.5rem; margin: 56px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--borda); }
+    h3 { color: var(--azul-escuro); font-size: 1.15rem; margin: 32px 0 10px; }
+    p { margin: 0 0 16px; text-align: justify; hyphens: auto; }
+    a { color: var(--azul); }
+    .autores { font-weight: 600; margin: 0 0 12px; }
+    .filiacao { font-style: italic; color: var(--texto-sec); margin: 0 0 4px; font-size: 0.95rem; text-align: left; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 16px; }
+    .badge { display: inline-flex; font-size: 0.75rem; border-radius: 4px; overflow: hidden; line-height: 1; border: 1px solid var(--borda); }
+    .badge span { padding: 5px 8px; }
+    .badge span:first-child { background: #374151; color: #fff; }
+    .badge span:last-child { background: var(--fundo-bloco); color: var(--texto); }
+    .botao-repo {
+      display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
+      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
+      color: var(--azul-escuro); font-weight: 600; font-size: 0.92rem; text-decoration: none;
+    }
+    .botao-repo:hover { background: #dbeafe; }
+    hr.divisor { border: 0; border-top: 2px solid var(--borda); margin: 32px 0 40px; }
+    .resumo {
+      background: var(--fundo-bloco); border-left: 4px solid var(--azul-claro);
+      padding: 24px 28px; border-radius: 0 8px 8px 0; margin-bottom: 32px;
+    }
+    .resumo h2 { margin: 0 0 10px; padding: 0; border: 0; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .palavras-chave { font-size: 0.92rem; color: var(--texto-sec); margin: 14px 0 0; text-align: left; }
+    nav.sumario { border: 1px solid var(--borda); border-radius: 8px; padding: 22px 28px; }
+    nav.sumario h2 { margin: 0 0 8px; padding: 0; border: 0; font-size: 1.05rem; }
+    nav.sumario ol { margin: 0; padding-left: 22px; }
+    nav.sumario li { margin: 6px 0; }
+    nav.sumario a { color: var(--texto-sec); text-decoration: none; }
+    nav.sumario a:hover { color: var(--azul); text-decoration: underline; }
+    .rq { background: var(--fundo-bloco); border: 1px solid var(--borda); border-radius: 8px; padding: 14px 20px; margin: 0 0 12px; }
+    .rq strong { color: var(--azul-escuro); }
+    figure { margin: 28px 0 32px; }
+    figure iframe { width: 100%; border: 1px solid var(--borda); border-radius: 8px; display: block; background: #fff; }
+    figure img { width: 100%; height: auto; border: 1px solid var(--borda); border-radius: 8px; display: block; }
+    figcaption { font-size: 0.88rem; color: var(--texto-sec); margin-top: 10px; line-height: 1.5; }
+    figcaption strong { color: var(--texto); }
+    .tabela-wrap { overflow-x: auto; margin: 20px 0 28px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .legenda-tabela { text-align: left; font-size: 0.88rem; color: var(--texto-sec); margin: 24px 0 -12px; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid var(--borda); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--azul-escuro); border-bottom: 2px solid var(--azul-claro); }
+    pre { margin: 18px 0 24px; border: 1px solid var(--borda); border-radius: 8px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; }
+    pre code.hljs { padding: 16px 18px; background: var(--fundo-bloco); }
+    code { font-family: Consolas, "Cascadia Code", Menlo, monospace; }
+    p code, li code, td code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+    .destaque { border-left: 4px solid var(--azul-claro); background: #eff6ff; padding: 14px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+    .destaque p:last-child { margin: 0; }
+    .fair { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0 24px; }
+    .fair div { border: 1px solid var(--borda); border-radius: 8px; padding: 14px 18px; background: var(--fundo-bloco); }
+    .fair h3 { margin: 0 0 6px; font-size: 1rem; }
+    .fair p { font-size: 0.9rem; margin: 0; text-align: left; }
+    ul { padding-left: 22px; }
+    li { margin: 4px 0; }
+    .referencias p { text-align: left; padding-left: 0; font-size: 0.93rem; }
+    footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--borda); font-size: 0.85rem; color: var(--texto-fraco); }
+    footer p { text-align: left; }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      main { padding: 28px 16px 60px; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.3rem; }
+      p { text-align: left; }
+      .resumo, nav.sumario { padding: 18px; }
+      .fair { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+
+  <!-- ================= CABEÇALHO ================= -->
+  <header>
+    <h1>Desigualdades no ENEM 2025: Rede de Ensino, Território e Perfil Socioeconômico</h1>
+    <p class="autores">Victor Hugo Nespoli</p>
+    <p class="filiacao">Bacharelado em Sistemas de Informação — Centro Universitário La Salle do Rio de Janeiro (UNILASALLE-RJ)</p>
+    <p class="filiacao">Disciplina: Linguagem de Programação (Análise e Visualização de Dados com Python) · 6º Período · 2026/2</p>
+
+    <div class="badges" aria-label="Metadados do projeto">
+      <span class="badge"><span>Dados</span><span>INEP · ENEM 2025</span></span>
+      <span class="badge"><span>Python</span><span>3.14</span></span>
+      <span class="badge"><span>Código</span><span>MIT</span></span>
+      <span class="badge"><span>Texto e dados</span><span>CC BY 4.0</span></span>
+      <span class="badge"><span>FAIR</span><span>F · A · I · R</span></span>
+    </div>
+
+    <a class="botao-repo" href="https://github.com/NESPOLIVH/enem-2025-desigualdades" target="_blank" rel="noopener">
+      <span aria-hidden="true">📦</span> Ver Repositório GitHub (Código e Dados)
+    </a>
+  </header>
+
+  <hr class="divisor">
+
+  <!-- ================= RESUMO ================= -->
+  <section class="resumo" aria-labelledby="resumo">
+    <h2 id="resumo">Resumo</h2>
+    <p>O Exame Nacional do Ensino Médio (ENEM) é a principal via de acesso ao ensino superior no Brasil, e seus microdados permitem examinar como as desigualdades educacionais se expressam no desempenho dos estudantes. Este estudo analisa os Microdados do ENEM 2025, divulgados pelo INEP, que abrangem 4.810.772 inscritos, para responder a três perguntas: como o desempenho varia entre redes de ensino e territórios; qual é a associação entre o perfil socioeconômico dos inscritos e o desempenho municipal; e onde se concentra a abstenção. Desenvolveu-se um <em>pipeline</em> determinístico em Python (pandas e PyArrow) que lê os arquivos brutos em blocos, trata valores ausentes e cria métricas derivadas. Como as bases de participantes e de resultados não possuem chave de ligação, a integração foi feita de forma agregada, pelo município de aplicação da prova. Entre os concluintes de 2025, a média geral da rede privada (610,5 pontos) superou a da rede estadual (497,1) em 113 pontos (<em>d</em> de Cohen = 1,36), e a maior distância ocorreu na redação. No nível municipal, a proporção de inscritos de baixa renda explica 71% da variação da média geral (ρ = −0,86). A abstenção atingiu 27,7% dos inscritos, chegou a 40,0% no Amazonas e foi cerca de cinco vezes maior entre concluintes da rede estadual do que da privada. Os resultados indicam que a origem socioeconômica e escolar continua determinante no exame e apontam a abstenção como dimensão adicional da desigualdade.</p>
+    <p class="palavras-chave"><strong>Palavras-chave:</strong> ENEM 2025; Desigualdade educacional; Microdados do INEP; Análise exploratória de dados; Python; Princípios FAIR.</p>
+  </section>
+
+  <nav class="sumario" aria-labelledby="sumario">
+    <h2 id="sumario">Sumário</h2>
+    <ol>
+      <li><a href="#introducao">Introdução</a></li>
+      <li><a href="#metodologia">Metodologia e Pipeline de Dados</a></li>
+      <li><a href="#resultados">Resultados e Discussão Visual</a></li>
+      <li><a href="#conclusao">Conclusão</a></li>
+      <li><a href="#fair">Disponibilidade e Princípios FAIR</a></li>
+      <li><a href="#referencias">Referências</a></li>
+    </ol>
+  </nav>
+
+  <!-- ================= 1. INTRODUÇÃO ================= -->
+  <section id="introducao">
+    <h2>1. Introdução</h2>
+    <p>Desde a reformulação de 2009, o ENEM deixou de ser apenas um instrumento de autoavaliação e passou a selecionar estudantes para universidades públicas, por meio do Sistema de Seleção Unificada (SiSU), e para programas de financiamento estudantil. A nota obtida no exame, portanto, condiciona trajetórias educacionais e profissionais. Se o desempenho reflete, em grande medida, as condições de origem dos participantes, o exame tende a reproduzir desigualdades preexistentes, fenômeno documentado desde o clássico Relatório Coleman (COLEMAN <em>et al.</em>, 1966).</p>
+    <p>O INEP disponibiliza anualmente os microdados do exame como dados abertos. Desde a edição de 2024, por exigência da Lei Geral de Proteção de Dados (BRASIL, 2018), as informações socioeconômicas dos inscritos e as notas são publicadas em arquivos separados e <strong>sem chave de ligação</strong> entre eles (INEP, 2026b). Essa decisão protege os participantes, mas impede análises no nível individual que relacionem renda e nota, o que exige do analista uma estratégia metodológica alternativa.</p>
+    <p>Este trabalho constrói um <em>pipeline</em> reprodutível em Python para explorar a edição de 2025 e responder às seguintes perguntas de pesquisa:</p>
+    <div class="rq"><strong>RQ1.</strong> Qual é a diferença de desempenho entre estudantes concluintes das redes federal, estadual, municipal e privada, e entre escolas urbanas e rurais? Essa diferença varia entre as Unidades da Federação?</div>
+    <div class="rq"><strong>RQ2.</strong> No nível municipal, qual é a associação entre o perfil socioeconômico dos inscritos (renda, escolaridade materna, acesso a tecnologia) e o desempenho médio no exame?</div>
+    <div class="rq"><strong>RQ3.</strong> Onde a abstenção é maior (por UF e por vínculo escolar) e como ela se relaciona com o perfil dos municípios?</div>
+  </section>
+
+  <!-- ================= 2. METODOLOGIA ================= -->
+  <section id="metodologia">
+    <h2>2. Metodologia e Pipeline de Dados</h2>
+
+    <h3>2.1 Fonte primária e granularidade</h3>
+    <p>Utilizaram-se os Microdados do ENEM 2025 (INEP, 2026a), publicados em abril de 2026. O conjunto contém três bases em formato CSV:</p>
+    <ul>
+      <li><code>RESULTADOS_2025.csv</code> (2,1 GB): uma linha por inscrito, com presença, notas das quatro provas objetivas e da redação e dados da escola de conclusão do ensino médio;</li>
+      <li><code>PARTICIPANTES_2025.csv</code> (513 MB): uma linha por inscrito, com faixa etária, sexo, cor/raça e as 23 questões do questionário socioeconômico;</li>
+      <li><code>ITENS_PROVA_2025.csv</code> (357 KB): uma linha por item e caderno, com gabarito e parâmetros da Teoria de Resposta ao Item (TRI).</li>
+    </ul>
+    <p>As duas bases principais têm exatamente 4.810.772 registros. Os dados da escola (rede e localização) estão disponíveis apenas para os inscritos identificados no Censo Escolar 2025 como possíveis concluintes do ensino médio (INEP, 2026b). Os egressos e os treineiros, por isso, não têm escola vinculada.</p>
+
+    <h3>2.2 Leitura de arquivos não triviais</h3>
+    <p>Os arquivos usam codificação Latin-1 (e não UTF-8) e separador ponto e vírgula, e o arquivo de resultados não cabe confortavelmente na memória se for lido por inteiro. A função de extração lê apenas as colunas necessárias, com tipos primitivos explícitos, em blocos de 500 mil linhas:</p>
+<pre><code class="language-python">def ler_csv_inep(caminho: Path, colunas: dict[str, str],
+                 tamanho_bloco: int = 500_000) -> pd.DataFrame:
+    """Lê um CSV dos microdados do INEP em blocos, apenas com as colunas pedidas."""
+    leitor = pd.read_csv(
+        caminho, sep=";", encoding="latin-1",
+        usecols=list(colunas), dtype=colunas,     # ex.: {"NU_NOTA_MT": "float32"}
+        na_values=[""], keep_default_na=False,
+        chunksize=tamanho_bloco,
+    )
+    return pd.concat(leitor, ignore_index=True)</code></pre>
+    <p>Das 70 colunas do arquivo de resultados, apenas 22 são lidas. Os vetores de respostas e de gabaritos, que concentram a maior parte do volume, são descartados. A tipagem em <code>float32</code> e <code>int8</code> e a conversão de textos repetidos em <code>category</code> reduzem o consumo de memória. A base tratada, no nível do participante, ocupa 84 MB em Parquet com compressão Zstandard, contra 2,1 GB do CSV original. O <em>pipeline</em> completo é executado em cerca de 20 segundos.</p>
+
+    <h3>2.3 Tratamento de valores ausentes e métricas derivadas</h3>
+    <p>Nota ausente não é um erro de coleta: ela indica que o inscrito faltou (código 0) ou foi eliminado (código 2). Por isso, nenhuma nota foi imputada. Definiu-se como <strong>participante válido</strong> aquele presente nas quatro provas objetivas e com nota de redação registrada (3.244.348 inscritos, ou 67,4%). Redações com problemas (em branco, fuga ao tema, cópia do texto motivador etc.) recebem nota zero do próprio INEP e foram mantidas, já que fazem parte do resultado oficial. As métricas derivadas são:</p>
+<pre><code class="language-python">pres = df[["TP_PRESENCA_CN", "TP_PRESENCA_CH", "TP_PRESENCA_LC", "TP_PRESENCA_MT"]]
+
+df["IN_FALTOU_DIA1"]   = (df["TP_PRESENCA_LC"] == 0) &amp; (df["TP_PRESENCA_CH"] == 0)
+df["IN_FALTOU_DIA2"]   = (df["TP_PRESENCA_CN"] == 0) &amp; (df["TP_PRESENCA_MT"] == 0)
+df["IN_AUSENTE_TOTAL"] = df["IN_FALTOU_DIA1"] &amp; df["IN_FALTOU_DIA2"]
+df["IN_VALIDO"]        = (pres == 1).all(axis=1) &amp; df["NU_NOTA_REDACAO"].notna()
+
+# Média simples das quatro objetivas e da redação (pesos iguais)
+notas = df[["NU_NOTA_CN", "NU_NOTA_CH", "NU_NOTA_LC", "NU_NOTA_MT", "NU_NOTA_REDACAO"]]
+df["NU_MEDIA_GERAL"] = notas.mean(axis=1).where(df["IN_VALIDO"])</code></pre>
+    <p>Na base de participantes, a renda familiar é informada em 17 faixas (questão Q007). Estimou-se a <strong>renda familiar <em>per capita</em></strong> dividindo o ponto médio de cada faixa pelo número de moradores (Q005). Para a faixa aberta, acima de R$ 30.360,00, adotou-se o limite inferior acrescido de 25%. Considerou-se de <strong>baixa renda</strong> o inscrito com renda <em>per capita</em> de até meio salário mínimo (R$ 759,00). Também foram criados indicadores binários de mãe sem ensino médio completo, ausência de internet e de computador no domicílio, conclusão do ensino médio apenas em escola pública e autodeclaração como preto, pardo ou indígena (PPI). Respostas do tipo "não sei" e "não declarado" foram tratadas como ausentes, para não distorcer as proporções.</p>
+
+    <h3>2.4 Integração ecológica pelo município de prova</h3>
+    <p>Como as bases não podem ser cruzadas indivíduo a indivíduo, cada uma foi agregada pelo código IBGE do município de aplicação da prova (<code>CO_MUNICIPIO_PROVA</code>), variável presente em ambas. A junção foi validada como 1:1:</p>
+<pre><code class="language-python">def integrar_municipios(res_mun, part_mun):
+    mun = res_mun.merge(part_mun, on="CO_MUNICIPIO_PROVA",
+                        how="inner", validate="one_to_one")
+    mun["RAZAO_INSCRITOS"] = mun["N_INSCRITOS_RES"] / mun["N_INSCRITOS_PART"]
+    return mun</code></pre>
+    <p>A razão entre o número de inscritos nas duas bases foi exatamente 1,0 em todos os 1.805 municípios, o que confirma a consistência do agrupamento. Para a RQ2 e parte da RQ3, consideraram-se os 1.787 municípios com pelo menos 100 participantes válidos, que reúnem 99,97% deles. Esse recorte evita médias instáveis em municípios muito pequenos. Correlações nesse nível são <strong>ecológicas</strong>: descrevem municípios, e não indivíduos (ROBINSON, 1950).</p>
+
+    <h3>2.5 Análise estatística e visualização</h3>
+    <p>Calcularam-se medidas de posição (média, mediana e quartis), de dispersão (desvio-padrão, coeficiente de variação e amplitude interquartil) e de forma (assimetria), além da proporção de <em>outliers</em> pelo critério de 1,5 × AIQ. Com milhões de observações, qualquer diferença é estatisticamente significativa. Por isso, a magnitude das diferenças entre grupos foi avaliada pelo <em>d</em> de Cohen (COHEN, 1988), e não por valores-p. As associações foram medidas pelas correlações de Pearson e Spearman, e a relação principal da RQ2, por regressão linear simples (mínimos quadrados ordinários). Os gráficos interativos foram produzidos com Plotly e a figura estática, com Matplotlib. As cores identificam sempre a mesma rede de ensino em todas as figuras, com paleta verificada para leitura por pessoas com daltonismo.</p>
+  </section>
+
+  <!-- ================= 3. RESULTADOS ================= -->
+  <section id="resultados">
+    <h2>3. Resultados e Discussão Visual</h2>
+    <p>A média geral dos 3,24 milhões de participantes válidos foi de 531,7 pontos (desvio-padrão de 93,5; mediana de 527,3), com distribuição praticamente simétrica (assimetria de 0,11) e apenas 0,29% de valores atípicos pelo critério da AIQ. Os grupos analisados a seguir, porém, se distribuem de forma muito desigual em torno desse centro.</p>
+
+    <h3>3.1 RQ1: Rede de ensino e território</h3>
+    <p>Entre os 1.288.485 concluintes válidos com escola identificada, a hierarquia entre as redes é nítida (Tabela 1 e Figura 1). A rede privada obteve a maior média (610,5), seguida pela federal (583,5), pela municipal (540,0) e pela estadual (497,1), que concentra 74,6% desses estudantes. A diferença entre privada e estadual, de <strong>113,4 pontos</strong>, corresponde a um <em>d</em> de Cohen de <strong>1,36</strong>, efeito considerado muito grande. A rede federal, também pública, ficou a apenas 27 pontos da privada (<em>d</em> = 1,04 em relação à estadual). Esse resultado é compatível com o processo seletivo de ingresso e com as melhores condições de infraestrutura e de carreira docente dos institutos federais.</p>
+
+    <p class="legenda-tabela"><strong>Tabela 1</strong> — Média geral por rede da escola de conclusão (concluintes 2025, participantes válidos).</p>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Rede</th><th>n</th><th>Média</th><th>Mediana</th><th>Desvio-padrão</th><th>Q1</th><th>Q3</th></tr></thead>
+        <tbody>
+          <tr><td>Estadual</td><td>961.328</td><td>497,1</td><td>496,9</td><td>83,0</td><td>442,7</td><td>553,8</td></tr>
+          <tr><td>Municipal</td><td>6.602</td><td>540,0</td><td>540,5</td><td>77,8</td><td>487,0</td><td>594,4</td></tr>
+          <tr><td>Federal</td><td>68.463</td><td>583,5</td><td>587,4</td><td>81,5</td><td>529,4</td><td>641,6</td></tr>
+          <tr><td>Privada</td><td>252.092</td><td>610,5</td><td>615,6</td><td>83,7</td><td>554,6</td><td>671,3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig1_box_rede.html" height="460" loading="lazy" title="Boxplot da média geral por rede de ensino"></iframe>
+      <figcaption><strong>Figura 1</strong> — Distribuição da média geral por rede da escola de conclusão. A caixa delimita o 1º e o 3º quartis, a linha cheia é a mediana, a tracejada é a média e o losango indica ±1 desvio-padrão. Passe o cursor para ver os valores. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>A Figura 2 agrupa as redes federal, estadual e municipal como "pública". O <strong>terceiro quartil da rede pública (561 pontos) fica abaixo da mediana da rede privada (616 pontos)</strong>: 90% dos concluintes da escola pública ficam abaixo do estudante típico da escola privada. A distribuição pública mostra ainda uma segunda concentração, por volta de 340 pontos, formada por participantes que tiveram a redação zerada. Entre todos os participantes válidos, esses casos somam 171.337 (5,3%). A taxa de redação zerada chega a 7,8% entre os concluintes da rede pública, contra 1,0% na privada.</p>
+
+    <figure>
+      <img src="assets/fig_hist_publica_privada.png" alt="Histogramas sobrepostos da média geral das redes pública e privada; a distribuição privada está deslocada cerca de 110 pontos para a direita." loading="lazy">
+      <figcaption><strong>Figura 2</strong> — Distribuição (densidade) da média geral nas redes pública e privada, com as medianas tracejadas. Figura estática em 200 dpi. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>A distância varia conforme a área do conhecimento (Figura 3). Ela é maior na <strong>redação</strong> (733,5 na privada contra 536,1 na estadual, ou 197 pontos) e em <strong>Matemática</strong> (140 pontos), e menor em Linguagens e Códigos (69 pontos). A redação depende de prática orientada e de correção individualizada, recursos mais escassos em turmas numerosas, o que ajuda a explicar a amplitude dessa diferença.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig2_areas_rede.html" height="440" loading="lazy" title="Médias por área do conhecimento e rede"></iframe>
+      <figcaption><strong>Figura 3</strong> — Média por área do conhecimento e rede da escola. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>Em relação ao território, os concluintes de escolas urbanas obtiveram média de 526,2, contra 483,3 nas rurais: uma diferença de 42,9 pontos e efeito moderado (<em>d</em> = 0,45). Entre as UFs (Figura 4), a distância entre privada e estadual vai de 88 pontos no Paraná e em São Paulo a <strong>147 pontos no Piauí</strong>, com Amazonas (132) e Alagoas (131) em seguida. A variação decorre sobretudo da rede estadual, cuja média oscila entre 456,3 (AL) e 522,6 (RS), enquanto as médias da rede privada ficam em uma faixa mais estreita, de 574 a 639 pontos. Nos estados do Sul e em São Paulo, a menor distância reflete uma rede pública mais forte, e não uma rede privada mais fraca.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig3_gap_uf.html" height="720" loading="lazy" title="Diferença entre escolas privadas e estaduais por UF"></iframe>
+      <figcaption><strong>Figura 4</strong> — Média geral nas redes estadual e privada por UF da escola, ordenadas pela diferença entre elas (maior no topo). Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <h3>3.2 RQ2: Perfil socioeconômico e desempenho municipal</h3>
+    <p>O perfil dos inscritos no ENEM 2025 é majoritariamente popular: 64,8% têm renda <em>per capita</em> de até meio salário mínimo (a mediana nacional é de R$ 474,38), 77,1% cursaram o ensino médio apenas em escola pública, 58,6% se autodeclaram pretos, pardos ou indígenas, 52,1% não têm computador em casa e 38,2% têm mãe sem ensino médio completo.</p>
+    <p>No nível municipal, a associação entre esse perfil e o desempenho é forte (Figura 5). A proporção de inscritos de baixa renda tem correlação de Spearman de <strong>−0,86</strong> com a média geral, e a reta de regressão explica <strong>71% da variação</strong> entre municípios (R² = 0,71). A cada 10 pontos percentuais a mais de inscritos de baixa renda, a média municipal cai, em média, <strong>13,9 pontos</strong>. Nos extremos, Tonantins (AM), com 98% de inscritos de baixa renda, tem média de 396,7, enquanto Veranópolis (RS), com 27%, alcança 605,8.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig4_dispersao_renda.html" height="500" loading="lazy" title="Dispersão entre proporção de baixa renda e média geral por município"></iframe>
+      <figcaption><strong>Figura 5</strong> — Cada círculo é um município (área proporcional ao número de participantes válidos). A linha tracejada é a reta de mínimos quadrados: média = 612,7 − 139,1 × (proporção de baixa renda). Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>A matriz de correlação (Figura 6) mostra que os indicadores socioeconômicos são fortemente correlacionados entre si e que a ausência de computador no domicílio é o indicador mais associado ao desempenho (ρ = −0,89). Em seguida vêm a renda <em>per capita</em> mediana (+0,86), a proporção de baixa renda (−0,86), a falta de internet (−0,85) e a proporção de inscritos PPI (−0,84). Como esses indicadores são quase colineares (ρ entre eles de até 0,98), não é possível isolar o efeito de cada um com dados agregados. Eles devem ser lidos como facetas de uma mesma condição socioeconômica.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig5_correlacao.html" height="640" loading="lazy" title="Matriz de correlação de Spearman entre indicadores municipais"></iframe>
+      <figcaption><strong>Figura 6</strong> — Correlação de Spearman entre os indicadores municipais (1.787 municípios). Azul indica correlação positiva e vermelho, negativa. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>A associação também aparece dentro de cada região (Tabela 2), o que afasta a hipótese de que ela seja apenas um efeito da diferença entre Norte/Nordeste e Sul/Sudeste. Ela é mais fraca no Centro-Oeste (ρ = −0,52) e no Nordeste (ρ = −0,67). No Nordeste, a proporção de baixa renda é alta e pouco variável entre municípios (mediana de 90%), o que restringe a amplitude do indicador e atenua a correlação.</p>
+
+    <p class="legenda-tabela"><strong>Tabela 2</strong> — Correlação de Spearman entre % de baixa renda e média geral, por região (municípios com ≥ 100 participantes válidos).</p>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Região</th><th>Municípios</th><th>ρ de Spearman</th><th>% baixa renda (mediana)</th><th>Média geral (mediana)</th></tr></thead>
+        <tbody>
+          <tr><td>Sudeste</td><td>492</td><td>−0,83</td><td>55,3%</td><td>545,2</td></tr>
+          <tr><td>Norte</td><td>231</td><td>−0,81</td><td>88,0%</td><td>474,0</td></tr>
+          <tr><td>Sul</td><td>252</td><td>−0,81</td><td>45,9%</td><td>538,8</td></tr>
+          <tr><td>Nordeste</td><td>654</td><td>−0,67</td><td>90,3%</td><td>496,9</td></tr>
+          <tr><td>Centro-Oeste</td><td>158</td><td>−0,52</td><td>63,0%</td><td>509,6</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.3 RQ3: Abstenção</h3>
+    <p>Dos 4,81 milhões de inscritos, <strong>27,7% faltaram aos dois dias de prova</strong>. A falta foi maior no segundo dia (32,2%) do que no primeiro (28,0%), padrão compatível com a desistência de quem considera ter ido mal no primeiro domingo. Entre as UFs (Figura 7), a abstenção é marcadamente mais alta na Região Norte, com <strong>40,0% no Amazonas</strong>, 35,3% em Roraima e 34,0% no Acre, além de Mato Grosso (35,3%). As menores taxas estão no Nordeste: Ceará (21,2%), Sergipe (23,1%) e Rio Grande do Norte (23,9%). Esse padrão sugere a influência das distâncias até os locais de prova e das dificuldades de deslocamento.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig6_abstencao_uf.html" height="440" loading="lazy" title="Abstenção total por UF"></iframe>
+      <figcaption><strong>Figura 7</strong> — Proporção de inscritos que faltaram aos dois dias, por UF de aplicação. Passe o cursor para ver a falta em cada dia. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>O vínculo escolar diferencia fortemente a abstenção (Figura 8). Entre os concluintes das redes privada e federal, apenas 5,5% e 5,8% faltaram, contra <strong>26,0% na rede estadual</strong>, quase cinco vezes mais. A maior taxa (31,0%) está entre os inscritos sem escola vinculada, grupo formado por egressos e treineiros. Assim, a desigualdade se manifesta antes mesmo da prova: parte expressiva dos estudantes da rede estadual nem chega a ser avaliada.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig7_abstencao_vinculo.html" height="420" loading="lazy" title="Abstenção por vínculo escolar"></iframe>
+      <figcaption><strong>Figura 8</strong> — Abstenção total por rede da escola de conclusão; em cinza, os inscritos sem escola vinculada (egressos e treineiros). Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+
+    <p>Curiosamente, no nível municipal, a abstenção quase não se associa aos indicadores socioeconômicos (|ρ| ≤ 0,17; Figura 6). A relação mais forte é com a proporção de treineiros (ρ = −0,49; Figura 9): municípios com mais inscritos treineiros têm abstenção menor. O contraste com a Figura 8 indica que a abstenção depende mais da situação escolar do inscrito e da geografia regional do que da renda média do município, o que reforça a cautela contra a falácia ecológica.</p>
+
+    <figure>
+      <iframe scrolling="no" src="assets/fig8_abstencao_treineiros.html" height="460" loading="lazy" title="Dispersão entre proporção de treineiros e abstenção por município"></iframe>
+      <figcaption><strong>Figura 9</strong> — Proporção de treineiros e abstenção total por município. Fonte: elaboração própria a partir de INEP (2026a).</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 4. CONCLUSÃO ================= -->
+  <section id="conclusao">
+    <h2>4. Conclusão</h2>
+    <p>A análise dos microdados do ENEM 2025 mostra que o desempenho no exame acompanha de perto a origem escolar e socioeconômica dos participantes. Quanto à <strong>RQ1</strong>, a rede privada supera a estadual em 113 pontos de média geral (<em>d</em> = 1,36), com distância máxima na redação. Essa diferença varia de 88 a 147 pontos entre as UFs, conforme a qualidade relativa da rede estadual, e a rede federal se aproxima da privada. Quanto à <strong>RQ2</strong>, a proporção de inscritos de baixa renda explica 71% da variação do desempenho entre municípios, e a associação permanece forte dentro de todas as regiões. Quanto à <strong>RQ3</strong>, mais de um quarto dos inscritos faltou às provas, com taxas maiores na Região Norte e cerca de cinco vezes maiores entre concluintes da rede estadual do que da privada.</p>
+
+    <div class="destaque">
+      <p><strong>Limitações.</strong> (i) As correlações da RQ2 e da RQ3 são ecológicas e não autorizam inferências sobre indivíduos. (ii) A rede de ensino só está disponível para os concluintes identificados no Censo Escolar (39,7% dos participantes válidos). (iii) A renda <em>per capita</em> é uma estimativa obtida pelo ponto médio das faixas. (iv) O município de prova nem sempre coincide com o de residência. (v) A média simples das cinco provas é uma convenção, já que cada área tem escala própria na TRI. (vi) A base de resultados não identifica treineiros. (vii) Os inscritos no ENEM não são uma amostra representativa de todos os estudantes do ensino médio.</p>
+    </div>
+
+    <p><strong>Trabalhos futuros.</strong> Recomenda-se: (a) estender o <em>pipeline</em> à série 2020–2025, para avaliar tendências; (b) vincular o código da escola ao Censo Escolar e ao Indicador de Nível Socioeconômico (INSE), o que permitiria modelos multinível com controle pelo perfil da escola; (c) explorar a base de itens para comparar a dificuldade (parâmetro <em>b</em> da TRI) das habilidades em que as redes mais divergem; e (d) produzir mapas coropléticos municipais da abstenção, associados a dados de mobilidade e de distância até os locais de prova.</p>
+  </section>
+
+  <!-- ================= 5. FAIR ================= -->
+  <section id="fair">
+    <h2>5. Disponibilidade dos Dados e Declaração FAIR</h2>
+    <p>Todo o código, os dados processados e este artigo estão no repositório público do projeto. A aderência aos princípios FAIR (WILKINSON <em>et al.</em>, 2016) é descrita abaixo.</p>
+
+    <div class="fair">
+      <div>
+        <h3>F · Localizável</h3>
+        <p><code>README.md</code> com resumo, palavras-chave padronizadas, autoria, disciplina, semestre e instituição, além de link perene para a fonte oficial do INEP.</p>
+      </div>
+      <div>
+        <h3>A · Acessível</h3>
+        <p>Repositório público; dados brutos obtidos por <code>data/raw/download_dados.py</code> no portal do INEP, sem autenticação; artigo publicado no GitHub Pages.</p>
+      </div>
+      <div>
+        <h3>I · Interoperável</h3>
+        <p>Dicionário de variáveis em <code>data/data_dictionary.md</code>; dados tratados em Parquet e CSV comprimido (<code>.csv.gz</code>), com códigos IBGE de município e UF.</p>
+      </div>
+      <div>
+        <h3>R · Reutilizável</h3>
+        <p>Licença MIT para o código e CC BY 4.0 para o texto e os dados; <code>requirements.txt</code> com versões congeladas; <em>pipeline</em> determinístico e modular em <code>src/</code>.</p>
+      </div>
+    </div>
+
+    <p>Para reproduzir integralmente o estudo:</p>
+<pre><code class="language-bash"># 1. Clonar o repositório
+git clone https://github.com/NESPOLIVH/enem-2025-desigualdades.git
+cd enem-2025-desigualdades
+
+# 2. Criar o ambiente virtual e instalar as dependências congeladas
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. Baixar os microdados brutos do INEP (~2,5 GB descompactados)
+python data/raw/download_dados.py
+
+# 4. Executar o pipeline ETL e regenerar tabelas, métricas e figuras
+python -m src.etl
+python -m src.visualizacao</code></pre>
+    <p>Os produtos gerados são: <code>data/processed/resultados_2025.parquet</code> (participante × resultado), <code>data/processed/participantes_2025.parquet</code> (participante × perfil), <code>data/processed/municipios_2025.csv.gz</code> (painel municipal integrado), <code>data/processed/tabelas/*.csv</code> e as figuras em <code>docs/assets/</code>. O caderno <code>notebooks/analise_exploratoria.ipynb</code> documenta a exploração e as verificações de validade.</p>
+  </section>
+
+  <!-- ================= 6. REFERÊNCIAS ================= -->
+  <section id="referencias" class="referencias">
+    <h2>6. Referências</h2>
+    <p>BRASIL. Lei nº 13.709, de 14 de agosto de 2018. Lei Geral de Proteção de Dados Pessoais (LGPD). <em>Diário Oficial da União</em>, Brasília, DF, 15 ago. 2018. Disponível em: &lt;https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm&gt;. Acesso em: 10 nov. 2026.</p>
+    <p>COHEN, J. <em>Statistical power analysis for the behavioral sciences</em>. 2. ed. Hillsdale: Lawrence Erlbaum Associates, 1988.</p>
+    <p>COLEMAN, J. S. <em>et al.</em> <em>Equality of educational opportunity</em>. Washington: U.S. Government Printing Office, 1966.</p>
+    <p>HUNTER, J. D. Matplotlib: a 2D graphics environment. <em>Computing in Science &amp; Engineering</em>, v. 9, n. 3, p. 90-95, 2007.</p>
+    <p>INSTITUTO NACIONAL DE ESTUDOS E PESQUISAS EDUCACIONAIS ANÍSIO TEIXEIRA (INEP). <em>Microdados do Enem 2025</em>. Brasília: Inep, 2026a. Disponível em: &lt;https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem&gt;. Acesso em: 10 nov. 2026.</p>
+    <p>INSTITUTO NACIONAL DE ESTUDOS E PESQUISAS EDUCACIONAIS ANÍSIO TEIXEIRA (INEP). <em>Microdados Enem 2025: Leia-me</em>. Brasília: Inep, 2026b.</p>
+    <p>MCKINNEY, W. Data structures for statistical computing in Python. In: PYTHON IN SCIENCE CONFERENCE, 9., 2010, Austin. <em>Proceedings</em> [...]. Austin: SciPy, 2010. p. 56-61.</p>
+    <p>PLOTLY TECHNOLOGIES INC. <em>Collaborative data science</em>. Montreal: Plotly Technologies Inc., 2015. Disponível em: &lt;https://plot.ly&gt;. Acesso em: 10 nov. 2026.</p>
+    <p>ROBINSON, W. S. Ecological correlations and the behavior of individuals. <em>American Sociological Review</em>, v. 15, n. 3, p. 351-357, 1950.</p>
+    <p>VIRTANEN, P. <em>et al.</em> SciPy 1.0: fundamental algorithms for scientific computing in Python. <em>Nature Methods</em>, v. 17, p. 261-272, 2020.</p>
+    <p>WILKINSON, M. D. <em>et al.</em> The FAIR Guiding Principles for scientific data management and stewardship. <em>Scientific Data</em>, v. 3, 160018, 2016.</p>
+  </section>
+
+  <footer>
+    <p>Texto e figuras licenciados sob <a href="https://creativecommons.org/licenses/by/4.0/deed.pt_BR" target="_blank" rel="noopener">CC BY 4.0</a>; código sob licença MIT. Dados originais: INEP, Microdados do ENEM 2025.</p>
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script>if (window.hljs) hljs.highlightAll();</script>
+</body>
+</html>
